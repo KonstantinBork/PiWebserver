@@ -17,8 +17,8 @@ public class TimeTrackerService implements Runnable {
 	private char[] buffer;
 	private File trackingFile;
 	
-	private static final String USER_HASH = "e55d7dac9520d4225db4e314526b3a855f96815a4ca7fd4713e46582a61c7b7e9d62ba5c85a668cedd0100869f904b322662f09b1654f97c4895e365484c0212";
-	private static final String PW_HASH = "ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413";
+	private static final String USER_HASH = "e55d7dac9520d4225db4e314526b3a855f96815a4ca7fd4713e46582a61c7b7e9d62ba5c85a668cedd0100869f904b322662f09b1654f97c4895e365484c0212";	// hash for "konstantin"
+	private static final String PW_HASH = "ba3253876aed6bc22d4a6ff53d8406c6ad864195ed144ab5c87621b6c233b548baeae6956df346ec8c17f5ea10f35ee3cbc514797ed7ddd3145464e2a0bab413";	// hash for "123456"
 	
 	public TimeTrackerService(InputStreamReader reader, OutputStreamWriter writer, char[] buffer) {
 		this.reader = reader;
@@ -96,22 +96,28 @@ public class TimeTrackerService implements Runnable {
 		}
 	}
 	
+	/**
+	 * Writes the tracking file.
+	 * @param i Mode to track either the start time (0) or the end time (1).
+	 */
 	private void writeFile(short i) {
 		try {
-			int bufferSize = 1024 * 1024;
+			int bufferSize = 1024 * 1024;	// size of 1 MB
 			char[] fb = new char[bufferSize]; 
 			FileReader fr = new FileReader(trackingFile);
 			int l = fr.read(fb);
 			FileWriter fw = new FileWriter(trackingFile);
-			String fbToString = String.valueOf(fb).substring(0, l);
-			if(fbToString == "") {
+			String fbToString;
+			if(l == -1)
 				fbToString = "<tt>\n\t<user>\n\t\tkonstantin\n\t</user>\n";
-			}
 			else {
+				fbToString = String.valueOf(fb).substring(0, l);
 				fbToString = fbToString.replace("\n</tt>", "");
 			}
+			Thread.sleep(1000);	// important for RasPi as it is slow
 			if(i == 0) {
-				fbToString = fbToString + "\t<date>\n\t\t" + currentTimeForFile(0)
+				String date = currentTimeForFile(0);
+				fbToString = fbToString + "\t<date>\n\t\t" + date
 						+ "\n\t\t<startTime>\n\t\t\t" + currentTimeForFile(1) 
 						+ "\n\t\t</startTime>\n\t</date>\n</tt>";
 			}
@@ -127,11 +133,16 @@ public class TimeTrackerService implements Runnable {
 			fw.flush();
 			fw.close();
 			fr.close();
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 
 		}
 	}
 	
+	/**
+	 * Returns the current time.
+	 * @param i Mode to give the date (0) or the time (1).
+	 * @return
+	 */
 	private String currentTimeForFile(int i) {
 		if(i == 0) {
 			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
@@ -139,7 +150,7 @@ public class TimeTrackerService implements Runnable {
 			return dateFormat.format(date);
 		}
 		else if(i == 1) {
-			DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+			DateFormat dateFormat = new SimpleDateFormat("HH:mm");
 			Date date = new Date();
 			return dateFormat.format(date);
 		}
