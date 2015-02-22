@@ -94,7 +94,7 @@ public class TimeTrackerService implements Runnable {
 	
 	private short checkTracking() {
 		try {
-			writer.write("Do you want to track start (0) or end (1) ?");
+			writer.write("Do you want to track start (0), end (1), break start (2) or break end (3) ?");
 			writer.flush();
 			int l = reader.read(buffer);
 			if(l == -1)
@@ -124,19 +124,30 @@ public class TimeTrackerService implements Runnable {
 				fbToString = fbToString.replace("\n</tt>", "");
 			}
 			Thread.sleep(1000);	// important for RasPi as it is slow
-			if(i == 0) {
-				String date = currentTimeForFile(0);
-				fbToString = fbToString + "\t<date>\n\t\t" + date
-						+ "\n\t\t<startTime>\n\t\t\t" + currentTimeForFile(1) 
-						+ "\n\t\t</startTime>\n\t</date>\n</tt>";
-			}
-			else if(i == 1) {
-				fbToString = fbToString.replace("</date>", "");
-				fbToString = fbToString + "\t<endTime>\n\t\t\t" + currentTimeForFile(1) 
-						+ "\n\t\t</endTime>\n\t</date>\n</tt>";
-			}
-			else {
-				fbToString = fbToString + "\n</tt>";
+			switch(i) {
+				case 0:
+					String date = currentTimeForFile(0);
+					fbToString = fbToString + "\t<date>\n\t\t" + date
+							+ "\n\t\t<startTime>\n\t\t\t" + currentTimeForFile(1) 
+							+ "\n\t\t</startTime>\n\t</date>\n</tt>";
+					break;
+				case 1:
+					fbToString = fbToString.replace("</date>", "");
+					fbToString = fbToString + "\t<endTime>\n\t\t\t" + currentTimeForFile(1) 
+							+ "\n\t\t</endTime>\n\t</date>\n</tt>";
+					break;
+				case 2:
+					fbToString = fbToString.replace("</date>", "");
+					fbToString = fbToString + "\t<breakStartTime>\n\t\t\t" + currentTimeForFile(1) 
+							+ "\n\t\t</breakStartTime>\n\t</date>\n</tt>";
+					break;
+				case 3:
+					fbToString = fbToString.replace("</date>", "");
+					fbToString = fbToString + "\t<breakEndTime>\n\t\t\t" + currentTimeForFile(1) 
+							+ "\n\t\t</breakEndTime>\n\t</date>\n</tt>";
+					break;
+				default:
+					fbToString = fbToString + "\n</tt>";
 			}
 			fw.write(fbToString);
 			fw.flush();
