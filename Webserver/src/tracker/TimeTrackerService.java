@@ -42,7 +42,16 @@ public class TimeTrackerService implements Runnable {
 		boolean checkPW = checkPassword(i);
 		if(!checkPW) return;
 		short fileWrite = checkTracking();
-		writeFile(fileWrite);
+		boolean writtenFile = writeFile(fileWrite);
+		try {
+			if(writtenFile)
+				writer.write("Tracking was successful!");
+			else
+				writer.write("Tracking was not successful!");
+		} catch (IOException e) {
+		
+		}
+		
 	}
 	
 	private boolean checkUserName(int i) {
@@ -100,7 +109,7 @@ public class TimeTrackerService implements Runnable {
 	 * Writes the tracking file.
 	 * @param i Mode to track either the start time (0) or the end time (1).
 	 */
-	private void writeFile(short i) {
+	private boolean writeFile(short i) {
 		try {
 			int bufferSize = 1024 * 1024;	// size of 1 MB
 			char[] fb = new char[bufferSize]; 
@@ -133,8 +142,9 @@ public class TimeTrackerService implements Runnable {
 			fw.flush();
 			fw.close();
 			fr.close();
+			return true;
 		} catch (IOException | InterruptedException e) {
-
+			return false;
 		}
 	}
 	
