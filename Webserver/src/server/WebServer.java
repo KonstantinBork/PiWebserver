@@ -5,7 +5,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import tracker.TimeTrackerService;
 
@@ -17,7 +16,7 @@ public class WebServer implements Runnable {
 	private Thread controllerThread;
 	private boolean isRunning;
 	
-	private ConcurrentLinkedQueue<Socket> connectedClients;
+	//private ConcurrentLinkedQueue<Socket> connectedClients;
 	
 	public WebServer(int port) {
 		this.port = port;
@@ -28,7 +27,7 @@ public class WebServer implements Runnable {
 		try {
 			serverSocket = new ServerSocket(port);
 			controller = new ServerControlPanel(this);
-			connectedClients = new ConcurrentLinkedQueue<Socket>();
+			//connectedClients = new ConcurrentLinkedQueue<Socket>();
 			System.out.println("Server started!");
 		} catch (IOException e) {
 			System.err.println("Error at creating server!");
@@ -49,7 +48,7 @@ public class WebServer implements Runnable {
 			char[] inputMessage = new char[1024];
 			while(isRunning) {
 				connection = serverSocket.accept();
-				connectedClients.add(connection);
+				//connectedClients.add(connection);
 				InputStreamReader fromClientReader = new InputStreamReader(connection.getInputStream());
 				OutputStreamWriter toClientWriter = new OutputStreamWriter(connection.getOutputStream());
 				System.out.println("New client connected");
@@ -60,12 +59,12 @@ public class WebServer implements Runnable {
 				}
 			}
 		} catch (IOException e) {
-			if(connectedClients.isEmpty())
-				System.out.println("Server closed");
-			else {
+			//if(connectedClients.isEmpty())
+				//System.out.println("Server closed");
+			//else {
 				close();
 				System.err.println("Error at running server!");
-			}
+			//}
 		}
 	}
 	
@@ -73,7 +72,7 @@ public class WebServer implements Runnable {
 		try {
 			controller = null;
 			isRunning = false;
-			connectedClients.clear();
+			//connectedClients.clear();
 			serverSocket.close();
 		} catch (IOException e) {
 			System.err.println("Error at shutting down server!");
