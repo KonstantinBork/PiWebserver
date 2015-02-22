@@ -53,17 +53,19 @@ public class WebServer implements Runnable {
 				InputStreamReader fromClientReader = new InputStreamReader(connection.getInputStream());
 				OutputStreamWriter toClientWriter = new OutputStreamWriter(connection.getOutputStream());
 				System.out.println("New client connected");
-				fromClientReader.read(inputMessage);
-				if(String.valueOf(inputMessage) == "time") {
+				int i = fromClientReader.read(inputMessage);
+				if(String.valueOf(inputMessage).substring(0, i).equals("time")) {
 					TimeTrackerService timeTracker = new TimeTrackerService(fromClientReader, toClientWriter, inputMessage);
-					timeTracker.run();
+					new Thread(timeTracker).start();
 				}
 			}
 		} catch (IOException e) {
 			if(connectedClients.isEmpty())
 				System.out.println("Server closed");
-			else
+			else {
+				close();
 				System.err.println("Error at running server!");
+			}
 		}
 	}
 	
@@ -71,6 +73,7 @@ public class WebServer implements Runnable {
 		try {
 			controller = null;
 			isRunning = false;
+			connectedClients.clear();
 			serverSocket.close();
 		} catch (IOException e) {
 			System.err.println("Error at shutting down server!");

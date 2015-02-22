@@ -10,7 +10,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class TimeTrackerService {
+public class TimeTrackerService implements Runnable {
 
 	private InputStreamReader reader;
 	private OutputStreamWriter writer;
@@ -25,6 +25,13 @@ public class TimeTrackerService {
 		this.writer = writer;
 		this.buffer = buffer;
 		trackingFile = new File(System.getProperty("user.home") + "/TimeTracker/konstantin.tt");
+		if(!trackingFile.exists()) {
+			try {
+				trackingFile.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void run() {
@@ -43,11 +50,14 @@ public class TimeTrackerService {
 			while(i < 3) {
 				writer.write("Please send your username");
 				writer.flush();
-				reader.read(buffer);
-				if(String.valueOf(buffer) == USER_HASH)
+				int l = reader.read(buffer);
+				if(l == -1)
+					continue;
+				if(String.valueOf(buffer).substring(0, l).equals(USER_HASH))
 					return true;
 				i++;
 			}
+			writer.write("Wrong username");
 			return false;
 		} catch (IOException e) {
 			return false;
@@ -59,11 +69,14 @@ public class TimeTrackerService {
 			while(i < 3) {
 				writer.write("Please send your password");
 				writer.flush();
-				reader.read(buffer);
-				if(String.valueOf(buffer) == PW_HASH)
+				int l = reader.read(buffer);
+				if(l == -1)
+					continue;
+				else if(String.valueOf(buffer).substring(0, l).equals(PW_HASH))
 					return true;
 				i++;
 			}
+			writer.write("Wrong password");
 			return false;
 		} catch (IOException e) {
 			return false;
@@ -74,8 +87,10 @@ public class TimeTrackerService {
 		try {
 			writer.write("Do you want to track start (0) or end (1) ?");
 			writer.flush();
-			reader.read(buffer);
-			return Short.parseShort(String.valueOf(buffer));
+			int l = reader.read(buffer);
+			if(l == -1)
+				return -1;
+			return Short.parseShort(String.valueOf(buffer).substring(0, l));
 		} catch (IOException e) {
 			return -1;
 		}
@@ -86,9 +101,9 @@ public class TimeTrackerService {
 			int bufferSize = 1024 * 1024;
 			char[] fb = new char[bufferSize]; 
 			FileReader fr = new FileReader(trackingFile);
-			fr.read(fb);
+			int l = fr.read(fb);
 			FileWriter fw = new FileWriter(trackingFile);
-			String fbToString = String.valueOf(fb);
+			String fbToString = String.valueOf(fb).substring(0, l);
 			if(fbToString == "") {
 				fbToString = "<tt>\n\t<user>\n\t\tkonstantin\n\t</user>\n";
 			}
