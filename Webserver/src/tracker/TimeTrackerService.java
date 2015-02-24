@@ -48,6 +48,10 @@ public class TimeTrackerService implements Runnable {
 				writer.write("Tracking was successful!");
 			else
 				writer.write("Tracking was not successful!");
+			System.out.println("User disconnected");
+			writer.flush();
+			writer.close();
+			reader.close();
 		} catch (IOException e) {
 		
 		}
@@ -62,8 +66,10 @@ public class TimeTrackerService implements Runnable {
 				int l = reader.read(buffer);
 				if(l == -1)
 					continue;
-				if(String.valueOf(buffer).substring(0, l).equals(USER_HASH))
+				if(String.valueOf(buffer).substring(0, l).equals(USER_HASH)) {
+					System.out.println("User tries to log in!");
 					return true;
+				}
 				i++;
 			}
 			writer.write("Wrong username");
@@ -81,8 +87,10 @@ public class TimeTrackerService implements Runnable {
 				int l = reader.read(buffer);
 				if(l == -1)
 					continue;
-				else if(String.valueOf(buffer).substring(0, l).equals(PW_HASH))
+				else if(String.valueOf(buffer).substring(0, l).equals(PW_HASH)) {
+					System.out.println("User successfully logged in!");
 					return true;
+				}
 				i++;
 			}
 			writer.write("Wrong password");
@@ -124,35 +132,34 @@ public class TimeTrackerService implements Runnable {
 				fbToString = fbToString.replace("\n</tt>", "");
 			}
 			Thread.sleep(1000);	// important for RasPi as it is slow
-			switch(i) {
-				case 0:
+			if(i == 0) {
 					String date = currentTimeForFile(0);
 					fbToString = fbToString + "\t<date>\n\t\t" + date
 							+ "\n\t\t<startTime>\n\t\t\t" + currentTimeForFile(1) 
 							+ "\n\t\t</startTime>\n\t</date>\n</tt>";
-					break;
-				case 1:
+			}
+			else if(i == 1) {
 					fbToString = fbToString.replace("</date>", "");
 					fbToString = fbToString + "\t<endTime>\n\t\t\t" + currentTimeForFile(1) 
 							+ "\n\t\t</endTime>\n\t</date>\n</tt>";
-					break;
-				case 2:
+			}
+			else if(i == 2) {
 					fbToString = fbToString.replace("</date>", "");
 					fbToString = fbToString + "\t<breakStartTime>\n\t\t\t" + currentTimeForFile(1) 
 							+ "\n\t\t</breakStartTime>\n\t</date>\n</tt>";
-					break;
-				case 3:
+			}
+			else if(i == 3) {
 					fbToString = fbToString.replace("</date>", "");
 					fbToString = fbToString + "\t<breakEndTime>\n\t\t\t" + currentTimeForFile(1) 
 							+ "\n\t\t</breakEndTime>\n\t</date>\n</tt>";
-					break;
-				default:
-					fbToString = fbToString + "\n</tt>";
 			}
+			else
+					fbToString = fbToString + "\n</tt>";
 			fw.write(fbToString);
 			fw.flush();
 			fw.close();
 			fr.close();
+			System.out.println("User tracked time");
 			return true;
 		} catch (IOException | InterruptedException e) {
 			return false;
