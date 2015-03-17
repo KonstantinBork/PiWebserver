@@ -10,6 +10,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+
 public class TimeTrackerService implements Runnable {
 
 	private InputStreamReader reader;
@@ -124,46 +128,68 @@ public class TimeTrackerService implements Runnable {
 			FileReader fr = new FileReader(trackingFile);
 			int l = fr.read(fb);
 			FileWriter fw = new FileWriter(trackingFile);
-			String fbToString;
+			String fbToString = "";
 			if(l == -1)
-				fbToString = "<tt>\n\t<user>\n\t\tkonstantin\n\t</user>\n";
-			else {
-				fbToString = String.valueOf(fb).substring(0, l);
-				fbToString = fbToString.replace("\n</tt>", "");
-			}
-			Thread.sleep(1000);	// important for RasPi as it is slow
-			if(i == 0) {
-					String date = currentTimeForFile(0);
-					fbToString = fbToString + "\t<date>\n\t\t" + date
-							+ "\n\t\t<startTime>\n\t\t\t" + currentTimeForFile(1) 
-							+ "\n\t\t</startTime>\n\t</date>\n</tt>";
-			}
-			else if(i == 1) {
-					fbToString = fbToString.replace("</date>", "");
-					fbToString = fbToString + "\t<endTime>\n\t\t\t" + currentTimeForFile(1) 
-							+ "\n\t\t</endTime>\n\t</date>\n</tt>";
-			}
-			else if(i == 2) {
-					fbToString = fbToString.replace("</date>", "");
-					fbToString = fbToString + "\t<breakStartTime>\n\t\t\t" + currentTimeForFile(1) 
-							+ "\n\t\t</breakStartTime>\n\t</date>\n</tt>";
-			}
-			else if(i == 3) {
-					fbToString = fbToString.replace("</date>", "");
-					fbToString = fbToString + "\t<breakEndTime>\n\t\t\t" + currentTimeForFile(1) 
-							+ "\n\t\t</breakEndTime>\n\t</date>\n</tt>";
-			}
+				fbToString = initializeFile();
 			else
-					fbToString = fbToString + "\n</tt>";
+				fbToString = String.valueOf(fb).substring(0, l);
+			fbToString = addDate(i, fbToString);
 			fw.write(fbToString);
 			fw.flush();
 			fw.close();
 			fr.close();
 			System.out.println("User tracked time");
 			return true;
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			return false;
 		}
+	}
+	/**
+	 * Initializes file if it does not exist.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private String initializeFile() {
+		JSONObject tt = new JSONObject();
+		JSONObject user = new JSONObject();
+		user.put("user", "Konstantin");
+		tt.put("tt", user);
+		return tt.toString();
+	}
+	
+	@SuppressWarnings("unchecked")
+	private String addDate(short i, String currentValue) {
+		JSONObject obj = (JSONObject) JSONValue.parse(currentValue);
+		JSONArray days = (JSONArray) ((JSONObject) obj.get("tt")).get("days");
+		JSONObject day;
+		if(days == null) {
+			days = new JSONArray();
+		}
+		int l = days.size();
+		switch(i) {
+			case 0:
+				day = new JSONObject();
+				day.put("date", currentTimeForFile(0));
+				day.put("startTime", currentTimeForFile(1));
+				days.add(day);
+				break;
+			case 1:
+				day = (JSONObject) days.get(l - 1);
+				day.put("endTime", currentTimeForFile(1));
+				break;
+			case 2:
+				day = (JSONObject) days.get(l - 1);
+				day.put("breakStartTime", currentTimeForFile(1));
+				break;
+			case 3:
+				day = (JSONObject) days.get(l - 1);
+				day.put("breakEndTime", currentTimeForFile(1));
+				break;
+			default:
+				day = null;
+		}
+		((JSONObject) obj.get("tt")).put("days", days);
+		return obj.toString();
 	}
 	
 	/**
