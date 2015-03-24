@@ -1,7 +1,6 @@
 package cloud;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -9,14 +8,13 @@ import java.nio.file.Files;
 
 import static java.nio.file.StandardCopyOption.*;
 
-import java.util.Arrays;
-import java.util.List;
+import utils.FileList;
 
 // Model
 public class CloudService implements Runnable, FileServer {
 
 	private static final File homeDir  = new File(System.getProperty("user.home") + "/cloud");;
-	private List<File> homeDirFiles;
+	private FileList homeDirFiles;
 	private InputStreamReader reader;
 	private OutputStreamWriter writer;
 	private char[] buffer;
@@ -25,15 +23,12 @@ public class CloudService implements Runnable, FileServer {
 		if(!homeDir.exists()) {
 			homeDir.mkdirs();
 		}
-		FileFilter filter = new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				if(pathname.getName().equals(".DS_Store"))
-					return false;
-				return true;
-			}
-		};
-		homeDirFiles = Arrays.asList(homeDir.listFiles(filter));
+		homeDirFiles = new FileList();
+		for(File f: homeDir.listFiles()) {
+			if(f.getName().startsWith("."))
+				continue;
+			homeDirFiles.add(f);
+		}
 		this.reader = reader;
 		this.writer = writer;
 		this.buffer = buffer;
@@ -104,7 +99,7 @@ public class CloudService implements Runnable, FileServer {
 	}
 
 	@Override
-	public List<File> getFiles() {
+	public FileList getFiles() {
 		return homeDirFiles;
 	}
 	
