@@ -2,24 +2,20 @@ package cloud;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 
 import static java.nio.file.StandardCopyOption.*;
-
 import utils.FileList;
+import utils.interfaces.Interaction;
 
 // Model
 public class CloudService implements Runnable, FileServer {
 
 	private static final File homeDir  = new File(System.getProperty("user.home") + "/cloud");;
 	private FileList homeDirFiles;
-	private InputStreamReader reader;
-	private OutputStreamWriter writer;
-	private char[] buffer;
+	private Interaction<String> messenger;
 	
-	public CloudService(InputStreamReader reader, OutputStreamWriter writer, char[] buffer) {
+	public CloudService(Interaction<String> m) {
 		if(!homeDir.exists()) {
 			homeDir.mkdirs();
 		}
@@ -29,14 +25,12 @@ public class CloudService implements Runnable, FileServer {
 				continue;
 			homeDirFiles.add(f);
 		}
-		this.reader = reader;
-		this.writer = writer;
-		this.buffer = buffer;
+		messenger = m;
 	}
 	
 	@Override
 	public void run() {
-		CloudController controller = new CloudController(reader, writer, buffer, this);
+		CloudController controller = new CloudController(messenger, this);
 		Thread controllerThread = new Thread(controller);
 		controllerThread.start();
 		try {

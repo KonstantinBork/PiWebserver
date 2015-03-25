@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,18 +13,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import security.LogIn;
+import utils.interfaces.Interaction;
 
 public class TimeTrackerService implements Runnable {
 
-	private InputStreamReader reader;
-	private OutputStreamWriter writer;
-	private char[] buffer;
+	private Interaction<String> messenger;
 	private File trackingFile;
 	
-	public TimeTrackerService(InputStreamReader reader, OutputStreamWriter writer, char[] buffer) {
-		this.reader = reader;
-		this.writer = writer;
-		this.buffer = buffer;
+	public TimeTrackerService(Interaction<String> m) {
+		messenger = m;
 		trackingFile = new File(System.getProperty("user.home") + "/TimeTracker/konstantin.tt");
 		if(!trackingFile.exists()) {
 			try {
@@ -38,37 +33,24 @@ public class TimeTrackerService implements Runnable {
 	}
 	
 	public void run() {
-		LogIn logIn = new LogIn(reader, writer);
+		LogIn logIn = new LogIn(messenger);
 		if(!logIn.logIn()) return;
 		short fileWrite = checkTracking();
 		boolean writtenFile = writeFile(fileWrite);
-		try {
-			if(writtenFile)
-				writer.write("Tracking was successful!");
-			else
-				writer.write("Tracking was not successful!");
-			System.out.println("User disconnected");
-			writer.flush();
-			writer.close();
-			reader.close();
-		} catch (IOException e) {
-			System.err.println("Tracking was not successful!");
-			e.printStackTrace();
-		}
+		if(writtenFile)
+			messenger.send("Tracking was successful!");
+		else
+			messenger.send("Tracking was not successful!");
+		System.out.println("User disconnected");
 		
 	}
 	
 	private short checkTracking() {
-		try {
-			writer.write("Do you want to track start (0), end (1), break start (2) or break end (3) ?");
-			writer.flush();
-			int l = reader.read(buffer);
-			if(l == -1)
-				return -1;
-			return Short.parseShort(String.valueOf(buffer).substring(0, l));
-		} catch (IOException e) {
+		messenger.send("Do you want to track start (0), end (1), break start (2) or break end (3) ?");
+		String res = messenger.receive();
+		if(res == null)
 			return -1;
-		}
+		return Short.parseShort(res);
 	}
 	
 	/**

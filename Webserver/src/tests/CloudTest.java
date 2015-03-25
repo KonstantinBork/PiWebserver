@@ -10,14 +10,14 @@ import java.io.OutputStreamWriter;
 import org.junit.Test;
 
 import utils.FileList;
+import utils.UserInteractionString;
 import cloud.CloudService;
 
 public class CloudTest {
 	
 	private static final InputStreamReader reader = new InputStreamReader(System.in);
 	private static final OutputStreamWriter writer = new OutputStreamWriter(System.out);
-	private static final char[] buffer = new char[1024];
-	private static final CloudService service = new CloudService(reader, writer, buffer);
+	private static final CloudService service = new CloudService(new UserInteractionString(reader, writer));
 
 	@Test
 	public void testGettingAllFiles() {
