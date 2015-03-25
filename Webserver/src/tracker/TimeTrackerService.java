@@ -12,7 +12,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
-import security.LogIn;
 import utils.interfaces.Interaction;
 
 public class TimeTrackerService implements Runnable {
@@ -33,31 +32,22 @@ public class TimeTrackerService implements Runnable {
 	}
 	
 	public void run() {
-		LogIn logIn = new LogIn(messenger);
-		if(!logIn.logIn()) return;
-		short fileWrite = checkTracking();
-		boolean writtenFile = writeFile(fileWrite);
-		if(writtenFile)
-			messenger.send("Tracking was successful!");
-		else
-			messenger.send("Tracking was not successful!");
-		System.out.println("User disconnected");
-		
-	}
-	
-	private short checkTracking() {
-		messenger.send("Do you want to track start (0), end (1), break start (2) or break end (3) ?");
-		String res = messenger.receive();
-		if(res == null)
-			return -1;
-		return Short.parseShort(res);
+		TimeTrackerController controller = new TimeTrackerController(messenger, this);
+		Thread controllerThread = new Thread(controller);
+		controllerThread.start();
+		try {
+			controllerThread.join();
+		} catch (InterruptedException e) {
+			System.err.println("Controller Thread was interrupted!");
+			e.printStackTrace();
+		}
 	}
 	
 	/**
 	 * Writes the tracking file.
 	 * @param i Mode to track either the start time (0), the end time (1), the break start time (2) the break end time (3) .
 	 */
-	private boolean writeFile(short i) {
+	public boolean writeFile(short i) {
 		try {
 			int bufferSize = 1024 * 1024;	// size of 1 MB
 			char[] fb = new char[bufferSize]; 

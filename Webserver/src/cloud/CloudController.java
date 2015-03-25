@@ -7,7 +7,6 @@ import utils.interfaces.Interaction;
 public class CloudController implements Runnable {
 
 	private CloudService service;
-	
 	private Interaction<String> messenger;
 	
 	public CloudController(Interaction<String> m, CloudService cs) {
