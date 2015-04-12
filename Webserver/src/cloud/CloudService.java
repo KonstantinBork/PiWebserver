@@ -1,47 +1,36 @@
 package cloud;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 
 import static java.nio.file.StandardCopyOption.*;
-
-import java.util.Arrays;
-import java.util.List;
+import utils.FileList;
+import utils.interfaces.Interaction;
 
 // Model
 public class CloudService implements Runnable, FileServer {
 
 	private static final File homeDir  = new File(System.getProperty("user.home") + "/cloud");;
-	private List<File> homeDirFiles;
-	private InputStreamReader reader;
-	private OutputStreamWriter writer;
-	private char[] buffer;
+	private FileList homeDirFiles;
+	private Interaction<String> messenger;
 	
-	public CloudService(InputStreamReader reader, OutputStreamWriter writer, char[] buffer) {
+	public CloudService(Interaction<String> m) {
 		if(!homeDir.exists()) {
 			homeDir.mkdirs();
 		}
-		FileFilter filter = new FileFilter() {
-			@Override
-			public boolean accept(File pathname) {
-				if(pathname.getName().equals(".DS_Store"))
-					return false;
-				return true;
-			}
-		};
-		homeDirFiles = Arrays.asList(homeDir.listFiles(filter));
-		this.reader = reader;
-		this.writer = writer;
-		this.buffer = buffer;
+		homeDirFiles = new FileList();
+		for(File f: homeDir.listFiles()) {
+			if(f.getName().startsWith("."))
+				continue;
+			homeDirFiles.add(f);
+		}
+		messenger = m;
 	}
 	
 	@Override
 	public void run() {
-		CloudController controller = new CloudController(reader, writer, buffer, this);
+		CloudController controller = new CloudController(messenger, this);
 		Thread controllerThread = new Thread(controller);
 		controllerThread.start();
 		try {
@@ -104,7 +93,7 @@ public class CloudService implements Runnable, FileServer {
 	}
 
 	@Override
-	public List<File> getFiles() {
+	public FileList getFiles() {
 		return homeDirFiles;
 	}
 	

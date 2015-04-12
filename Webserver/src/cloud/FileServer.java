@@ -1,7 +1,8 @@
 package cloud;
 
 import java.io.File;
-import java.util.List;
+
+import utils.FileList;
 
 public interface FileServer {
 
@@ -38,6 +39,6 @@ public interface FileServer {
 	 * Returns all a list of all files saved on the server.
 	 * @return
 	 */
-	public List<File> getFiles();
+	public FileList getFiles();
 	
 }

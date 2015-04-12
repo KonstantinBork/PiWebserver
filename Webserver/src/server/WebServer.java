@@ -7,6 +7,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import tracker.TimeTrackerService;
+import utils.UserInteractionString;
+import utils.interfaces.Interaction;
 
 public class WebServer implements Runnable {
 
@@ -45,16 +47,15 @@ public class WebServer implements Runnable {
 	private void runServer() {
 		try {
 			Socket connection;
-			char[] inputMessage = new char[1024];
 			while(isRunning) {
 				connection = serverSocket.accept();
 				//connectedClients.add(connection);
 				InputStreamReader fromClientReader = new InputStreamReader(connection.getInputStream());
 				OutputStreamWriter toClientWriter = new OutputStreamWriter(connection.getOutputStream());
+				Interaction<String> messenger = new UserInteractionString(fromClientReader, toClientWriter);
 				System.out.println("New client connected");
-				int i = fromClientReader.read(inputMessage);
-				if(String.valueOf(inputMessage).substring(0, i).equals("time")) {
-					TimeTrackerService timeTracker = new TimeTrackerService(fromClientReader, toClientWriter, inputMessage);
+				if(messenger.receive().equals("time")) {
+					TimeTrackerService timeTracker = new TimeTrackerService(messenger);
 					new Thread(timeTracker).start();
 				}
 			}
